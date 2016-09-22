@@ -1,0 +1,376 @@
+\documentclass[handout,10pt]{beamer}
+
+\usetheme{AnnArbor}
+\usecolortheme{beaver}
+
+\graphicspath{{include/}}
+
+\setlength{\unitlength}{\textwidth}  % measure in textwidths
+\usepackage[normalem]{ulem}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{enumerate items}[default]
+\setbeamertemplate{enumerate subitem}{\alph{enumii}.}
+\setbeamertemplate{enumerate subsubitem}{\roman{enumiii}.}
+\setkeys{Gin}{width=0.6\textwidth}
+
+\newcommand{\ind}{\stackrel{ind}{\sim}}
+
+
+\institute[ISU]{Iowa State University}
+\date{\today}
+
+\title[Fully Bayes RNAseq analysis]{Fully Bayesian analysis of RNAseq data for gene expression heterosis detection}
+\author{Dr. Jarad Niemi}
+
+\begin{document}
+
+
+
+\begin{frame}
+\maketitle
+
+\pause
+
+{\small
+Dr. Dan Nettleton, Dr. Will Landau, Eric Mittman, and Ignacio Alvarez-Castro
+}
+
+\vspace{0.2in} \pause
+
+{\tiny
+This research was supported by National Institute of General Medical Sciences (NIGMS) of the National Institutes of Health and the joint National Science Foundation / NIGMS Mathematical Biology Program under award number R01GM109458. The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health or the National Science Foundation.
+}
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Outline}
+
+\begin{itemize}
+\item Background
+	\begin{itemize}
+	\item Heterosis
+	\item RNAseq data \pause
+	\end{itemize}
+\item Modeling 
+	\begin{itemize}
+	\item Composite null hypothesis \pause
+	\item Hierarchical overdispersed count regression model
+	\end{itemize}
+\item Inference
+	\begin{itemize}
+	\item Empirical Bayes
+	\item Fully Bayes \pause on graphics processing units
+		\begin{itemize}
+		\item Memory transfers
+		\item Memory coalescence
+		\item Random number generation \pause
+		\end{itemize}
+	\end{itemize}
+\item Simulation studies
+	\begin{itemize}
+	\item Credible interval coverage
+	\item Heterosis detection via ROC curves \pause
+	\end{itemize}
+\item Real data analysis \pause
+\item Future work
+\end{itemize}
+
+\end{frame}
+
+
+\section{Background}
+\subsection{Heterosis}
+
+\begin{frame}
+\frametitle{Heterosis}
+\begin{definition}
+Heterosis, or hybrid vigor, is the enhancement of the phenotype of hybrid progeny relative to their inbred parents.
+\end{definition}
+
+\pause
+
+\begin{center}
+\includegraphics{heterosis}
+\end{center}
+{\tiny (\url{http://www2.iastate.edu/~nscentral/news/06/may/vigor.shtml} modified by Will Landau)} 
+\end{frame}
+
+
+
+\subsection{RNAseq data}
+% \begin{frame}
+% \frametitle{RNAseq data}
+% \setkeys{Gin}{width=0.8\textwidth}
+% \begin{center}
+% \includegraphics{rnaseq}
+% \end{center}
+% {\tiny Wang, Gerstein, and Snyder. (2010) \url{http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2949280/figure/F1/}}
+% \end{frame}
+
+
+% \begin{frame}
+% \frametitle{RNAseq data}
+% \begin{center}
+% \includegraphics{rnaseq2}
+% \end{center}
+% {\tiny url{http://bio.lundberg.gu.se/courses/vt13/rnaseq.html}}
+% \end{frame}
+
+
+\begin{frame}
+\frametitle{RNA fragmentation, sequencing, and alignment}
+\setkeys{Gin}{width=0.5\textwidth}
+\begin{center}
+\includegraphics{rnaseq3}
+\end{center}
+{\tiny (Pepke, Wold, and Mortazavi (2009) \url{http://www.nature.com/nmeth/journal/v6/n11s/fig_tab/nmeth.1371_F5.html})}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{RNAseq data}
+\setkeys{Gin}{width=0.8\textwidth}
+
+\begin{center}
+\includegraphics{data}
+\end{center}
+{\tiny (Will Landau)}
+
+\end{frame}
+
+
+\section{Modeling}
+\subsection{Composite null hypothesis}
+\begin{frame}
+\frametitle{Hypotheses}
+\setkeys{Gin}{width=0.2\textwidth}
+\footnotesize
+
+For a given gene, let 
+\begin{itemize}\scriptsize
+\item $\mu_{B\phantom{M}}$: mean expression for B73 inbred parent,
+\item $\mu_{M\phantom{B}}$: mean expression for Mo17 inbred parent,
+\item $\mu_{BM}$: mean expression for B73$\times$Mo17 F1 hybrid, and
+\item $\mu_{MB}$: mean expression for Mo17$\times$B73 F1 hybrid.
+\end{itemize}
+\pause
+We are interested in comparing hypotheses of the form
+\[ 
+H_0: \mu_{min} < \mu_{BM} < \mu_{max}, \qquad H_{LPH}: \mu_{BM} < \mu_{min}, \qquad H_{HPH}: \mu_{max} < \mu_{BM}
+\]
+where $\mu_{min} = \min(\mu_B,\mu_M)$ and $\mu_{max} = \max(\mu_B,\mu_M)$. 
+
+\vspace{0.1in} \pause
+
+<<echo=FALSE, out.width='0.3\\textwidth', fig.align='center', fig.width=4, fig.height=4>>=
+mB = expression(mu[B])
+mM = expression(mu[M])
+mBM = expression(mu[BM])
+
+opar = par(mar=rep(0,4)+.1)
+plot(0,0, type="n", axes=FALSE, xlab="", ylab="", xlim=c(-1,1), ylim=c(-1,1))
+polygon(c(0,-2,-2,0), c(0,2,-2,0), col='pink', border=NA)
+polygon(c(0, 2, 2,0), c(0,2,-2,0), col='pink', border=NA)
+abline(0, 1)
+abline(0,-1)
+abline(0,0,lty=2)
+text(-0.8, 1, expression(mu[B]==mu[BM]))
+text( 0.8, 1, expression(mu[BM]==mu[M]))
+text( 0.9,.05, expression(mu[B]==mu[M]))
+text( 0.0, 0.8, expression(paste(mu[B], "<", mu[BM] < mu[M])))
+text( 0.8, 0.5, expression(paste(mu[B], "<", mu[M] < mu[BM])))
+text( 0.8,-0.5, expression(paste(mu[M], "<", mu[B] < mu[BM])))
+text( 0.0,-0.8, expression(paste(mu[M], "<", mu[BM] < mu[B])))
+text(-0.8,-0.5, expression(paste(mu[BM], "<", mu[M] < mu[BM])))
+text(-0.8, 0.5, expression(paste(mu[BM], "<", mu[B] < mu[M])))
+text(-0.5, 0, "LPH", cex=2)
+text( 0.5, 0, "HPH", cex=2)
+par(opar)
+@
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Posterior hypothesis probabilities}
+\small
+
+If we had a posterior distribution for the mean expression levels, i.e. 
+\[ 
+p(\mu_B,\mu_M,\mu_{BM},\mu_{MB}|y)
+\]
+where $y$ represents our data, 
+then we could calculate the relevant hypothesis probabilities, i.e. 
+\[ \begin{array}{rl}
+P(H_{0\phantom{PH}}|y) &= P(\mu_{min} < \mu_{BM} < \mu_{max}|y) \\
+P(H_{LPH}|y) &= P(\mu_{BM} < \mu_{min}|y) \\
+P(H_{HPH}|y) &= P(\mu_{max} < \mu_{BM}|y)
+\end{array} \]
+where $\mu_{min} = \min(\mu_B,\mu_M)$ and $\mu_{max} = \max(\mu_B,\mu_M)$. 
+
+\vspace{0.1in} \pause
+
+Hierarchical modeling \emph{partially pools} the information across genes and thereby provides a data-based multiple comparison adjustment by 
+\begin{itemize}
+\item shrinking estimates toward a grand mean (or zero) based on the variability inherent in the data and 
+\item reducing posterior uncertainty by borrowing information across genes. 
+\end{itemize}
+{\tiny (Gelman, Hill, and Yajima (2012))}
+
+\end{frame}
+
+
+\subsection{Hierarchical overdispersed count regression model}
+\begin{frame}
+\frametitle{Overdispersed count regression model}
+
+Let 
+\begin{itemize}
+\item $g$ ($g=1,\ldots,G$) identify the gene, 
+\item $n$ ($n=1,\ldots,N$) identify the sample, \pause
+\item $y$ be the $G\times N$ matrix of RNAseq counts \pause and
+\item $X$ be the $N\times L$ model matrix that connects the $N$ samples to the varieties, blocking factors, etc.
+\end{itemize}
+We assume 
+\[ 
+y_{gn} \ind \text{Po} \left (e^{h_n + \varepsilon_{gn} + x_n' \beta_{g}} \right )
+\]
+where 
+\begin{itemize}
+\item $h_n$ are \emph{normalization factors},
+\item $\varepsilon_{gn} \ind N(0,\gamma_g)$ allow for gene-specific overdispersion, 
+\item $x_n$ is the $n^{th}$ row of $X$, and
+\item $\beta_g$ is a vector of length $L$ that account for effects on gene expression of variables of interest. 
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Hierarchical model}
+
+Recall 
+\[ 
+y_{gn} \ind \text{Po} \left (e^{h_n + \varepsilon_{gn} + x_n' \beta_{g}} \right )
+\qquad\mbox{and}\qquad
+\varepsilon_{gn} \ind N(0,\gamma_g).
+\]
+
+\vspace{0.1in} \pause
+
+We construct a hierarchical model for both $\gamma_g$ and $\beta_g$ to borrow information across genes. \pause
+Specifically, we assume
+\[ 
+1/\gamma_g\ind \text{Ga} \left (\nu/2,\nu\tau/2 \right)
+\]
+such that $E[1/\gamma_g] = 1/\tau$ and $CoV[1/\gamma_g] = \sqrt{2/\nu}$ \pause and 
+\[ 
+\beta_{g\ell} \ind N(\theta_\ell, \sigma_\ell^2)
+\]
+for $\ell=1,\ldots,L$. 
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Model matrix for our heterosis experiment}
+
+Experimental design:  4 varieties, 2 plates, 2 replicates per variety per plate
+
+\pause
+
+\begin{equation*} 
+X = \left (
+\begin{bmatrix}
+1 & \phantom{-}1 & -1 & \phantom{-}0 \\
+1 & -1 & \phantom{-}1 & \phantom{-}0 \\
+1 & \phantom{-}1 & \phantom{-}1 & \phantom{-}1 \\
+1 & \phantom{-}1 & \phantom{-}1 & -1 \\
+\end{bmatrix} \otimes J_{(N/4) \times 1} \qquad \qquad
+J_{(N/4) \times 1} \otimes
+\begin{bmatrix}
+\phantom{-}1  \\
+\phantom{-}1  \\
+-1 \\
+-1  \\
+\end{bmatrix} \right )
+\end{equation*}
+where $\otimes$ denotes the Kronecker product and $J_{m \times n}$ is the $m$ by $n$ matrix with all entries equal to 1.
+
+\vspace{0.1in} \pause
+
+Interpretations of the gene-specific parameters (dropping the $g$ subscript) are
+\begin{itemize}
+\item $\beta_1$ is the parental mean
+\item $\beta_2$ is the half difference of hybrid mean vs M
+\item $\beta_3$ is the half difference of hybrid mean vs B
+\item $\beta_4$ is the half difference between hybrid
+\item $\beta_5$ is the flow cell block effect 
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Heterosis hypotheses}
+
+\footnotesize
+\begin{tabular}{l|l|l}
+Heterosis & With log-scale group means  & With $\beta_{g\ell}$ parameters \\ \hline
+high-parent BM & $\phantom{1\mu_{g,\text{BM}} + } \mu_{g,\text{BM}} > \phantom{2} \max \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $\phantom{-}2\beta_{g2} + \beta_{g4}, \phantom{-}2\beta_{g3} + \beta_{g4} > 0$ \\
+low-parent BM & $\phantom{1\mu_{g,\text{BM}} + }\mu_{g,\text{BM}} < \phantom{2}  \min\, \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $-2\beta_{g2} - \beta_{g4}, -2\beta_{g3} - \beta_{g4} > 0$ \\
+high-parent MB & $\phantom{1\mu_{g,\text{BM}} + }\mu_{g,\text{MB}} > \phantom{2}  \max \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $\phantom{-}2\beta_{g2} - \beta_{g4}, \phantom{-}2\beta_{g3} - \beta_{g4} > 0$ \\
+low-parent MB & $\phantom{1\mu_{g,\text{BM}} + }  \mu_{g,\text{MB}} < \phantom{2} \min\, \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $-2\beta_{g2} + \beta_{g4}, \phantom{-}2\beta_{g3} + \beta_{g4} > 0$ \\
+high-parent mean & $\mu_{g,\text{BM}} + \mu_{g,\text{MB}} > 2 \max \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $\phantom{-}\beta_{g2}, \phantom{-}\beta_{g3} > 0$ \\
+low-parent mean & $\mu_{g,\text{BM}} + \mu_{g,\text{MB}} < 2 \min\, \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $-\beta_{g2}, -\beta_{g3} > 0$ 
+\end{tabular}
+
+\end{frame}
+
+
+
+\section{Inference}
+\subsection{Empirical Bayes}
+\subsection{Fully Bayes on graphics processing units}
+
+\section{Simulation studies}
+\subsection{Credible interval coverage}
+\subsection{Heterosis detection}
+
+\section{Real data analysis}
+
+\section{Future work}
+\subsection{Alternative hierarchical distributions}
+\subsection{Semi-parametric approach}
+\subsection{Allele specific expression}
+
+
+
+\begin{frame}
+\frametitle{References}
+\tiny
+
+\begin{itemize}
+\item Gelman, A., Hill, J., \& Yajima, M. (2012). Why we (usually) don't have to worry about multiple comparisons. Journal of Research on Educational Effectiveness, 5(2), 189-211.
+\end{itemize}
+
+\end{frame}
+
+\end{document}   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
