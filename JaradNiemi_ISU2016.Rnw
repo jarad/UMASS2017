@@ -340,7 +340,7 @@ P(A\cup B) = P(A) + P(B) - P(A \cap B).
 
 \begin{frame}
 \frametitle{Directed acyclic graphical model}
-\setkeys{Gin}{width=0.5\textwidth}
+\setkeys{Gin}{width=\textwidth}
 
 \vspace{-0.1in}
 
@@ -348,6 +348,25 @@ P(A\cup B) = P(A) + P(B) - P(A \cap B).
 \includegraphics{dag3c}
 {\tiny (Will Landau)}
 \end{center}
+
+% \begin{figure}[htbp]
+%    \centering
+%    \begin{minipage}{0.49\textwidth}
+%    \begin{align*}
+% &y_{gn} \stackrel{\text{ind}}{\sim} \text{Poisson} \left (\exp \left (h_n + \varepsilon_{gn} + X_n \beta_{g} \right ) \right ) \\
+% & \qquad \varepsilon_{gn} \stackrel{\text{ind}}{\sim} \text{Normal}(0, \gamma_g) \\
+% & \qquad \qquad \gamma_g \stackrel{\text{ind}}{\sim} \text{Inverse-Gamma}\left (\frac{\nu}{2}, \frac{\nu \tau}{2} \right) \\
+% & \qquad \qquad \qquad \nu \stackrel{\text{}}{\sim} \text{Uniform}(0, d) \\
+% & \qquad \qquad \qquad \tau \stackrel{\text{}}{\sim} \text{Gamma}(a, \text{rate} = b) \\
+% & \qquad \beta_{g\ell} \stackrel{\text{ind}}{\sim} \text{Normal}(\theta_\ell, \sigma_\ell^2) \\
+% & \qquad \qquad \theta_\ell \stackrel{\text{ind}}{\sim} \text{Normal}(0, c_\ell^2) \\
+% & \qquad \qquad \sigma_\ell \stackrel{\text{ind}}{\sim} \text{Uniform}(0, s_\ell)
+% \end{align*}
+%    \end{minipage} 
+%    \begin{minipage}{0.49\textwidth}
+%    \includegraphics{dag3c}
+%    \end{minipage}
+% \end{figure}
 
 where $G\approx 40\,000$, $N=16$, and $L=5$ in our application \pause and thus we have 
 \begin{itemize}
@@ -410,16 +429,19 @@ Took about 10 hours to run.
 
 All priors are constructed to be vague, proper, and (if possible) conditionally conjugate. \pause 
 There are $2(L+1)$ hyperparameters and we assign the following priors
-\[ \begin{array}{rl}
-\tau &\sim Ga(a,b) \\
+\[ \begin{array}{rll}
+\tau &\sim Ga(a,b) & \mbox{conditionally conjugate} \\
 \nu &\sim Unif(0,d) \\
-\theta_\ell &\ind N(0,c_\ell^2) \\
-\sigma_\ell &\ind Unif(0,s_\ell)
+\theta_\ell &\ind N(0,c_\ell^2) & \mbox{conditionally conjugate} \\
+\sigma_\ell &\ind Unif(0,s_\ell) & \mbox{Gelman (2006)}
 \end{array} \]
 \pause
 As we'll see, posterior distributions for these parameters are extremely tight relative to their priors. 
 
 \end{frame}
+
+
+
 
 
 \begin{frame}
@@ -449,6 +471,7 @@ As we'll see, posterior distributions for these parameters are extremely tight r
 \tiny
 
 \begin{itemize}
+\item Gelman, A. (2006). Prior distributions for variance parameters in hierarchical models (comment on article by Browne and Draper). Bayesian analysis, 1(3), 515-534.
 \item Gelman, A., Hill, J., \& Yajima, M. (2012). Why we (usually) don't have to worry about multiple comparisons. Journal of Research on Educational Effectiveness, 5(2), 189-211.
 \end{itemize}
 
