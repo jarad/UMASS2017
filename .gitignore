@@ -42,5 +42,6 @@ vignettes/*.pdf
 *.synctex.gz
 *.tex
 *.toc
+*.vrb
 
 figure/

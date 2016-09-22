@@ -317,7 +317,7 @@ Interpretations of the gene-specific parameters (dropping the $g$ subscript) are
 \begin{frame}
 \frametitle{Heterosis hypotheses}
 
-\footnotesize
+{\footnotesize
 \begin{tabular}{l|l|l}
 Heterosis & With log-scale group means  & With $\beta_{g\ell}$ parameters \\ \hline
 high-parent BM & $\phantom{1\mu_{g,\text{BM}} + } \mu_{g,\text{BM}} > \phantom{2} \max \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $\phantom{-}2\beta_{g2} + \beta_{g4}, \phantom{-}2\beta_{g3} + \beta_{g4} > 0$ \\
@@ -327,14 +327,109 @@ low-parent MB & $\phantom{1\mu_{g,\text{BM}} + }  \mu_{g,\text{MB}} < \phantom{2
 high-parent mean & $\mu_{g,\text{BM}} + \mu_{g,\text{MB}} > 2 \max \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $\phantom{-}\beta_{g2}, \phantom{-}\beta_{g3} > 0$ \\
 low-parent mean & $\mu_{g,\text{BM}} + \mu_{g,\text{MB}} < 2 \min\, \left (\mu_{g,\text{B}}, \mu_{g,\text{M}} \right )$ & $-\beta_{g2}, -\beta_{g3} > 0$ 
 \end{tabular}
+}
+
+\vspace{0.2in} \pause
+
+All hypothesis regions are intersections of contrast events\pause, but we can also accomodate unions of contrast events via 
+\[ 
+P(A\cup B) = P(A) + P(B) - P(A \cap B).
+\]
 
 \end{frame}
+
+\begin{frame}
+\frametitle{Directed acyclic graphical model}
+\setkeys{Gin}{width=0.5\textwidth}
+
+\vspace{-0.1in}
+
+\begin{center}
+\includegraphics{dag3c}
+{\tiny (Will Landau)}
+\end{center}
+
+where $G\approx 40\,000$, $N=16$, and $L=5$ in our application \pause and thus we have 
+\begin{itemize}
+\item $G\times N + G + 2 + G\times L + 2\times L \approx 800\,000$ parameters \pause
+\item and $G\times N \approx 640\,000$ observations.
+\end{itemize}
+\end{frame}
+
 
 
 
 \section{Inference}
 \subsection{Empirical Bayes}
+\begin{frame}[fragile]
+\frametitle{Empirical Bayes}
+\small
+
+First we tried to fit this model using black-box Bayesian software, i.e. JAGS and Stan, but it appears computationally intractable using these platforms. 
+
+\vspace{0.2in} \pause
+
+Niemi, Mittman, Landau, and Nettleton (2015) used an empirical Bayes approach by 
+{\footnotesize
+\begin{enumerate}
+\item using moment matching techniques on independent gene-specific parameter estimates \pause
+\item and then parallelizing the MCMC across genes. 
+\end{enumerate}
+}
+
+\pause
+
+<<eval=FALSE, size="tiny">>=
+if (require(doMC)) {
+  registerDoMC()
+} else {
+  parallel=FALSE
+}
+
+analysis = adply(d,
+                 1,
+                 function(x) single_gene_analysis(x),
+                 .id = 'gene',
+                 .parallel = parallel,
+                 .paropts = list(.export=c('single_gene_analysis','model','hyperparameters'), .packages='rstan'))
+@
+
+\pause
+
+Took about 10 hours to run. 
+
+\end{frame}
+
+
+
+
+
 \subsection{Fully Bayes on graphics processing units}
+\begin{frame}
+\frametitle{Priors}
+
+All priors are constructed to be vague, proper, and (if possible) conditionally conjugate. \pause 
+There are $2(L+1)$ hyperparameters and we assign the following priors
+\[ \begin{array}{rl}
+\tau &\sim Ga(a,b) \\
+\nu &\sim Unif(0,d) \\
+\theta_\ell &\ind N(0,c_\ell^2) \\
+\sigma_\ell &\ind Unif(0,s_\ell)
+\end{array} \]
+\pause
+As we'll see, posterior distributions for these parameters are extremely tight relative to their priors. 
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Conditional independencies}
+
+
+
+\end{frame}
+
+
 
 \section{Simulation studies}
 \subsection{Credible interval coverage}
