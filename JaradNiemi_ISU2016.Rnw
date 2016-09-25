@@ -598,6 +598,78 @@ S_c^2 = \frac{M}{M-1}\left[\ov{\theta^2}_c-\ov{\theta}^2_c \right] \approx \ov{\
 \end{frame}
 
 
+\begin{frame}
+\frametitle{Normal-based credible intervals}
+
+For the collection of parameters $\psi$ and under regularity conditions, we have 
+\[ 
+p_N(\psi|y_N) \stackrel{d}{\to} N\left(\psi_0, \left[\mathrm{I}_N(\psi_0)\right]^{-1}\right)
+\]
+as $N\to \infty$ where $\psi_0$ is the true value and $\mathrm{I}_N(\psi_0)$ is the Fisher information. 
+
+\vspace{0.1in} \pause
+
+For any scalar parameter $\theta$, we have 
+\[ 
+\theta|y \dot\sim N\left(\ov{\theta}, \ov{\theta^2}-\ov{\theta}^2\right)
+\]
+\pause
+and can construct normal-based credible intervals with 
+\[ 
+\ov{\theta} \pm z_{\alpha/2} \sqrt{\ov{\theta^2}-\ov{\theta}^2}
+\]
+where $P(Z>z_\alpha)=\alpha$ and $Z$ is a standard normal distribution.
+\end{frame}
+
+
+
+
+\begin{frame}
+\frametitle{Estimating hypothesis probabilities}
+
+Recall we are interested in estimating probabilities similar to 
+
+\[ \begin{array}{l}
+P(\mbox{high parent heterosis for the B73$\times$Mo17 hybrid}|y) \\ \\
+\qquad = P\left(\left.2\beta_{g2} + \beta_{g4}>0 \mbox{ and }  2\beta_{g3} + \beta_{g4} > 0\right|y \right) \pause \\ \\
+\qquad \approx \frac{1}{M} \sum_{m=1}^M \mathrm{I}\left( 2\beta_{g2}^{(m)} + \beta_{g4}^{(m)}>0\right)\mathrm{I}\left(2\beta_{g3}^{(m)} + \beta_{g4}^{(m)} > 0 \right) 
+\end{array} \]
+
+\vspace{0.1in} \pause
+
+We can use the running sums to keep track of this sum. 
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Implementation}
+The computation for this hierarchical count regression model is provided in the following three R packages:
+
+\begin{itemize}
+\item {\tt fbseq}: user interface 
+\item {\tt fbseqOpenMP}: multithreaded backend
+\item {\tt fbseqCUDA}: GPU backend
+\end{itemize}
+
+\pause
+
+<<setup,size="tiny">>=
+library(fbseq)
+data(paschold) # Paschold et. al. (2012) data
+
+paschold@contrasts[[5]]
+paschold@contrasts[[6]]
+paschold@propositions$`high-parent_B73xMo17`
+@
+
+<<dependson="setup",eval=FALSE, size="tiny">>=
+configs    = Configs(burnin = 10, iterations = 10, thin = 1) 
+chain      = Chain(paschold, configs) 
+chain_list = fbseq(chain, backend = "CUDA")
+@
+\end{frame}
 
 
 
@@ -620,8 +692,9 @@ S_c^2 = \frac{M}{M-1}\left[\ov{\theta^2}_c-\ov{\theta}^2_c \right] \approx \ov{\
 \tiny
 
 \begin{itemize}
-\item Gelman, A. (2006). Prior distributions for variance parameters in hierarchical models (comment on article by Browne and Draper). Bayesian analysis, 1(3), 515-534.
-\item Gelman, A., Hill, J., \& Yajima, M. (2012). Why we (usually) don't have to worry about multiple comparisons. Journal of Research on Educational Effectiveness, 5(2), 189-211.
+\item Gelman, A. (2006). Prior distributions for variance parameters in hierarchical models (comment on article by Browne and Draper). \emph{Bayesian analysis}, 1(3), 515--534.
+\item Gelman, A., Hill, J., and Yajima, M. (2012). Why we (usually) don't have to worry about multiple comparisons. \emph{Journal of Research on Educational Effectiveness}, 5(2), 189--211.
+\item Paschold, A., Jia, Y., Marcon, C., Lund, S., Larson, N.B., Yeh, C.T., Ossowski, S., Lanz, C., Nettleton, D., Schnable, P.S. and Hochholdinger, F., 2012. Complementation contributes to transcriptome complexity in maize (Zea mays L.) hybrids relative to their inbred parents. \emph{Genome researc}h, 22(12), pp.2445--2454.
 \end{itemize}
 
 \end{frame}
