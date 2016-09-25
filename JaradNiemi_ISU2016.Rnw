@@ -675,10 +675,106 @@ chain_list = fbseq(chain, backend = "CUDA")
 
 
 \section{Simulation studies}
+
+\begin{frame}
+\frametitle{Simulation studies}
+
+\begin{itemize}
+\item Simulation model
+  \begin{itemize}
+  \item Model: hierarchical count regression model with data-based hyperparameters
+  \item Simple: count regression model with sparsity in gene-specific parameters 
+  \item edgeR: negative binomial model with data-based gene-specific parameters
+  \end{itemize}
+\item Inference
+  \begin{itemize}
+  \item edgeR: non-hierarchical except for overdispersion, negative binomial model
+  \item fully Bayes: Bayesian analysis with hierarchical count regression model 
+  \item eBayes (Means): empirical Bayesian analysis with hierarchical count regression model with hyperparameter estimated from posterior means of the fully Bayes approach
+  \item eBayes (Oracle): empirical Bayesian analysis with hierarchical count regression model with true values for the hyperparameters
+  \end{itemize}
+\item Data size
+  \begin{itemize}
+  \item $G=30\,000$
+  \item $N=16$ and $N=32$
+  \end{itemize}
+\end{itemize}
+
+\end{frame}
+
 \subsection{Credible interval coverage}
+\begin{frame}
+\frametitle{Hyperparameter coverage}
+\begin{center}
+\includegraphics{fig-hypercoverage}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Gene-specific parameter coverage}
+
+Overall, we had approximately 95\% coverage of 95\% credible intervals, \pause but 
+
+\vspace{0.1in}
+
+\begin{center}
+\includegraphics{fig-betashrink}
+\end{center}
+
+where the lower plot indicates that when the intervals miss, we are overshrinking. 
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Mean squared error}
+\begin{center}
+\includegraphics{fig-msecomparison}
+\end{center}
+\end{frame}
+
+
+
 \subsection{Heterosis detection}
+\begin{frame}
+\frametitle{ROC curves for heterosis detection}
+\begin{center}
+\includegraphics{fig-roc16}
+\end{center}
+\end{frame}
+
+
+
 
 \section{Real data analysis}
+\begin{frame}
+\frametitle{Analysis of Paschold et. al. (2012) data}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Hyperparameter posterior}
+\begin{center}
+\includegraphics{fig-hyperhist}
+\end{center}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Gene-specific parameter posteriors}
+\begin{center}
+\includegraphics{fig-betahist}
+\end{center}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Shrinkage}
+\begin{center}
+\includegraphics{fig-edgerparms}
+\end{center}
+\end{frame}
+
+
 
 \section{Future work}
 \subsection{Alternative hierarchical distributions}
