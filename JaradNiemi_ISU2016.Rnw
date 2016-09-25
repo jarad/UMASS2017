@@ -15,6 +15,7 @@
 \setkeys{Gin}{width=0.6\textwidth}
 
 \newcommand{\ind}{\stackrel{ind}{\sim}}
+\providecommand{\ov}[1]{\overline{#1}}
 
 
 \institute[ISU]{Iowa State University}
@@ -66,7 +67,6 @@ This research was supported by National Institute of General Medical Sciences (N
 	\item Fully Bayes \pause on graphics processing units
 		\begin{itemize}
 		\item Memory transfers
-		\item Memory coalescence
 		\item Random number generation \pause
 		\end{itemize}
 	\end{itemize}
@@ -345,7 +345,19 @@ P(A\cup B) = P(A) + P(B) - P(A \cap B).
 \vspace{-0.1in}
 
 \begin{center}
+\begin{minipage}{0.49\textwidth}
 \includegraphics{dag3c}
+\end{minipage}
+\begin{minipage}{0.49\textwidth}
+\[ \begin{array}{l}
+p(\varepsilon,\beta,\gamma,\theta,\sigma,\tau,\mu|y) = \\ \\
+p(\varepsilon,\beta,\gamma|\tau,\nu,\theta,\sigma, y) \\
+\, \times p(\tau,\nu,\theta,\sigma|y) \propto \\ \\
+\quad \prod_{g=1}^G \left\{ \left[ \prod_{n=1}^N p(y_{gn}|\beta_{g},\varepsilon_{gn}) p(\varepsilon_{gn}|\gamma_g) \right] \right. \\
+\quad \phantom{\prod_{g=1}^G} \left[\prod_{\ell=1}^L p(\beta_{g\ell}|\theta_\ell,\sigma_\ell) p(\theta_\ell) p(\sigma_\ell) \right] \\
+\quad \left.\phantom{\prod_{g=1}^G} p(\gamma_g|\tau,\nu) \right\} p(\tau)p(\nu)
+\end{array} \]
+\end{minipage}
 {\tiny (Will Landau)}
 \end{center}
 
@@ -391,9 +403,15 @@ First we tried to fit this model using black-box Bayesian software, i.e. JAGS an
 Niemi, Mittman, Landau, and Nettleton (2015) used an empirical Bayes approach by 
 {\footnotesize
 \begin{enumerate}
-\item using moment matching techniques on independent gene-specific parameter estimates \pause
-\item and then parallelizing the MCMC across genes. 
+\item using moment matching techniques on independent gene-specific parameter estimates to obtain hyperparameter estimates
+\item and then parallelizing the MCMC across genes, i.e. 
 \end{enumerate}
+\[
+p(\varepsilon,\beta,\gamma|\hat{\tau},\hat{\nu},\hat{\theta},\hat{\sigma}, y) \propto
+\prod_{g=1}^G \left\{ \left[ \prod_{n=1}^N p(y_{gn}|\beta_{g},\varepsilon_{gn}) p(\varepsilon_{gn}|\gamma_g) \right] \left[\prod_{\ell=1}^L p(\beta_{g\ell}|\hat\theta_\ell,\hat\sigma_\ell) \right]
+p(\gamma_g|\hat\tau,\hat\nu) \right\}
+\]
+
 }
 
 \pause
@@ -423,7 +441,7 @@ Took about 10 hours to run.
 
 
 
-\subsection{Fully Bayes on graphics processing units}
+\subsection{Fully Bayes}
 \begin{frame}
 \frametitle{Priors}
 
@@ -445,11 +463,142 @@ As we'll see, posterior distributions for these parameters are extremely tight r
 
 
 \begin{frame}
-\frametitle{Conditional independencies}
+\frametitle{Constructing a Gibbs sampler}
 
+Conditional independence within a step:
+\[ \begin{array}{rl}
+p(\varepsilon|\ldots) &\propto \prod_{g=1}^G \prod_{n=1}^N Po\left(y_{gn}|e^{h_n+\varepsilon_{gn}+x_n'\beta_g}\right)N(\varepsilon_{gn}|0,\gamma_g) \\
+p(\gamma|\ldots) &\propto \prod_{g=1}^G \prod_{n=1}^N N(\varepsilon_{gn}|0,\gamma_g) IG(\gamma_g,\nu/2,\nu\tau/2) \\
+p(\beta_{\ell}|\ldots) &\propto \prod_{g=1}^G \prod_{n=1}^N Po\left(y_{gn}|e^{h_n+\varepsilon_{gn}+x_n'\beta_g}\right)N(\beta_{g\ell}|\theta_\ell, \sigma_\ell^2) 
+\end{array} \]
+
+\vspace{0.1in} \pause
+
+Sufficient ``statistics'':
+\[ \begin{array}{rl@{\qquad}rl}
+p(\tau|\ldots) &\sim Ga(\tau|a',b') & (a',b') &= f_{\tau}(\gamma,\nu,a,b) \\
+p(\nu|\ldots) &\sim p(\mu|d')\mathrm{I}(0<\nu<d) & d' &= f_\nu(\gamma,\tau,d) \\
+p(\theta_\ell|\ldots) &\sim N(\theta_\ell|m'_\ell, C'_\ell) & (m'_\ell,C'_\ell) &= f_{\theta_\ell}(\beta_\ell,\sigma_\ell,c_\ell^2) \\
+p(\sigma_\ell^2|\ldots) &\sim IG(e',f') \mathrm{I}(0<\sigma_\ell^2<s^2_\ell) & (e',f') &= f_{\sigma_\ell}(\beta_\ell,\theta_{\ell})
+\end{array} \]
+\pause
+where the functions calculate means, variances, products, etc. over $G$ terms. 
+\end{frame}
+
+
+\subsection{GPUs}
+\begin{frame}
+\frametitle{Parallel hardware platforms}
+
+(All values are orders of magnitude)
+
+\begin{center}
+\begin{tabular}{l|rrr}
+& \multicolumn{3}{c}{Platform} \\
+& Multicore & Accelerator (GPU) & Cluster \\
+\hline
+\# of nodes &  10 &  1000 &  100+ \\
+node speed (GHz) &  1 &  1/2 &  1   \\
+memory (GB) &  10 &  10 &  10/node \\
+node comm. speed (GB/s) &  10 &  10 &  1 \\
+data transfer speed (GB/s) & N/A &  1 &  1 \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.1in} \pause
+
+The combination of 
+\begin{itemize}
+\item number of nodes and
+\item node communication speed
+\end{itemize}
+make accelerators a good choice for parallelizable MCMC.
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Parallization translated to a GPU}
+
+If there are $G$ nodes, then 
+\begin{itemize}
+\item Conditional inpdendence $\to$ embarrassingly parallel - possible speedup is $G$
+\item Calculate sufficient ``statistics'' $\to$ reduction - possible speedup is $[G-1]/\log_2(G)$
+\end{itemize}
+
+\vspace{0.1in} \pause
+
+\begin{center}
+\includegraphics{parallel_reduction}
+
+{\tiny (\url{https://scs.senecac.on.ca/~gpu610/pages/images/parallel_reduction.png})}
+\end{center}
 
 
 \end{frame}
+
+
+
+\begin{frame}
+\frametitle{GPU computing algorithm constraints}
+
+\begin{center}
+\begin{tabular}{ll}
+Constraint & Solution \\
+\hline
+memory coalescence \pause & set up proper data structures \pause \\ \\
+only uniform and normal RNGs \pause & step out slice sampler \pause \\ \\
+data transfer speed \pause & thinning \pause \\ \\
+& return draws for a small subset of parameters \\
+& \quad hyperparameters \\
+& \quad random set of gene-specific parameters \pause \\ \\
+& calculate running sums for \\
+& \quad convergence diagnostics \\
+& \quad normal-based credible intervals \\
+& \quad hypothesis probabilities \\
+\hline
+\end{tabular}
+\end{center}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Convergence diagnostics}
+\small
+
+For each parameter $\theta$ over the $M$ iterations of chain $c$, calculate 
+\[ 
+\ov{\theta}_c= \frac{1}{M}\sum_{m = 1}^M \theta_c^{(m)} 
+\qquad\mbox{and}\qquad
+\ov{\theta^2}_c = \frac{1}{M} \sum_{m = 1}^M \left(\theta_c^{(m)} \right)^2.
+\]
+using a numerically stable one-pass (or online) algorithm.
+
+\vspace{0.1in} \pause \pause
+
+Compute  the Gelman-Rubin convergence diagnostic amongst $C$ chains using
+\[
+\widehat{R} = \sqrt{1 + \frac{1}{M} \left(\frac{B}{W} - 1 \right)}
+\] 
+where 
+\[
+B = \frac{M}{C - 1} \sum_{c = 1}^C  \left (\ov{\theta}_c - \ov{\theta} \right )^2,
+W = \frac{1}{C} \sum_{c = 1}^C S_c^2,
+\]
+\[
+\ov{\theta} = \frac{1}{C} \sum_{c = 1}^C \ov{\theta}_c,
+\mbox{ and }
+S_c^2 = \frac{M}{M-1}\left[\ov{\theta^2}_c-\ov{\theta}^2_c \right] \approx \ov{\theta^2}_c-\ov{\theta}^2_c 
+%\frac{1}{M - 1} \sum_{m = 1}^M \left (\theta_c^{(m)} - \ov{\theta}_c \right )^2
+.
+\]
+
+\end{frame}
+
+
+
 
 
 
