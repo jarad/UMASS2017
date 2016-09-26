@@ -134,19 +134,20 @@ Heterosis, or hybrid vigor, is the enhancement of the phenotype of hybrid progen
 
 \begin{frame}
 \frametitle{RNAseq data}
-\setkeys{Gin}{width=0.8\textwidth}
+\setkeys{Gin}{width=0.7\textwidth}
 
 \begin{center}
 \includegraphics{data}
-\end{center}
 {\tiny (Will Landau)}
+\end{center}
 
 \pause
-
+{\small
 \begin{itemize}
 \item Low parent heterosis (LPH): expression in hybrid is lower than both parents
 \item High parent heterosis (HPH): expression in hybrid is higher than both parents
 \end{itemize}
+}
 
 
 \end{frame}
@@ -810,7 +811,7 @@ For example,
 \item $\xi_{g\ell}=1 \implies \beta_{g\ell} \ind N(\theta_\ell,\sigma_\ell^2)$
 \item $\xi_{g\ell} \ind IG(q_\ell, r_\ell) \implies \beta_{g\ell} \ind t_{2q_\ell}(\theta_\ell,\sigma^2_\ell r_\ell/ q_\ell)$
 \item $\xi_{g\ell} \ind Exp(k_\ell) \implies \beta_{g\ell} \ind Laplace(\theta_\ell, \sigma^2_\ell/2k_\ell)$
-\item $\xi_{g\ell} \ind Ca^+(0,1) \implies \beta_{g\ell} \ind Horseshoe(\theta_\ell,\sigma_\ell)$
+\item $\xi_{g\ell} \ind Ca^+(0,1) \implies \beta_{g\ell} \ind Horseshoe(\theta_\ell,\sigma_\ell)$ (Carvalho, Polson, and Scott 2010)
 \end{itemize}
 \pause
 These are all implemented in {\tt fbseq}. 
@@ -838,6 +839,7 @@ for some unknown distribution $\mathcal{F}$. \pause Then we can place a prior on
 \mathcal{F} \sim DP(a F_0),
 \]
 i.e. a Dirichlet process prior with concentration parameter $a>0$ and base measure $F_0$ on $\mathbb{R}^{L+1}$. 
+Related to work by Liu, Wang, and Liu (2015). 
 \end{frame}
 
 
@@ -872,7 +874,26 @@ The additional Gibbs sampling steps are
 
 
 \subsection{Allele specific expression}
+\begin{frame}
+\frametitle{Allele specific expression}
 
+In addition to the total count from a particular gene, sometimes we are able to identify the origin, i.e. allele B or M. \pause Scientists would be interested in detecting alleles of genes that have a ratio of expression in the hybrid that differs from 
+\begin{itemize}
+\item one and/or
+\item the ratio of parental expression.
+\end{itemize}
+
+\vspace{0.1in} \pause
+
+From a modeling perspective, this brings up at least two questions:
+\begin{itemize}
+\item how do we construct a model matrix for arbitrary scenarios (Lithio and Nettleton 2015) and
+\item how do we incorporate the idea of random effects, i.e. create non-independence in the samples. 
+\end{itemize}
+
+
+
+\end{frame}
 
 
 \begin{frame}
@@ -880,9 +901,12 @@ The additional Gibbs sampling steps are
 \tiny
 
 \begin{itemize}
-\item Gelman, A. (2006). Prior distributions for variance parameters in hierarchical models (comment on article by Browne and Draper). \emph{Bayesian analysis}, 1(3), 515--534.
-\item Gelman, A., Hill, J., and Yajima, M. (2012). Why we (usually) don't have to worry about multiple comparisons. \emph{Journal of Research on Educational Effectiveness}, 5(2), 189--211.
-\item Paschold, A., Jia, Y., Marcon, C., Lund, S., Larson, N.B., Yeh, C.T., Ossowski, S., Lanz, C., Nettleton, D., Schnable, P.S. and Hochholdinger, F., 2012. Complementation contributes to transcriptome complexity in maize (Zea mays L.) hybrids relative to their inbred parents. \emph{Genome researc}h, 22(12), pp.2445--2454.
+\item Carvalho, C. M., Polson, N. G., and Scott, J. G. (2010). The horseshoe estimator for sparse signals. \emph{Biometrika} 97(2)" 465--480
+\item Gelman, A. (2006) Prior distributions for variance parameters in hierarchical models (comment on article by Browne and Draper). \emph{Bayesian analysis}, 1(3), 515--534.
+\item Gelman, A., Hill, J., and Yajima, M. (2012) Why we (usually) don't have to worry about multiple comparisons. \emph{Journal of Research on Educational Effectiveness}, 5(2), 189--211.
+\item Lithio, A., and Nettleton, D. (2015). Hierarchical modeling and differential expression analysis for rna-seq experiments with inbred and hybrid genotypes. \emph{Journal of Agricultural, Biological, and Environmental Statistics}, 20(4), 598-613.
+\item Liu, Fangfang, Chong Wang, and Peng Liu. (2015) A Semi-parametric Bayesian Approach for Differential Expression Analysis of RNA-seq Data. \emph{Journal of Agricultural, Biological, and Environmental Statistics} 20, no. 4 : 555--576.
+\item Paschold, A., Jia, Y., Marcon, C., Lund, S., Larson, N.B., Yeh, C.T., Ossowski, S., Lanz, C., Nettleton, D., Schnable, P.S. and Hochholdinger, F., (2012) Complementation contributes to transcriptome complexity in maize (Zea mays L.) hybrids relative to their inbred parents. \emph{Genome researc}h, 22(12), pp.2445--2454.
 \end{itemize}
 
 \end{frame}
