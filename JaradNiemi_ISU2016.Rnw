@@ -349,7 +349,7 @@ low-parent mean & $\mu_{g,\text{BM}} + \mu_{g,\text{MB}} < 2 \min\, \left (\mu_{
 
 \vspace{0.2in} \pause
 
-All hypothesis regions are intersections of contrast events\pause, but we can also accomodate unions of contrast events via 
+All hypothesis regions are intersections of linear combination events\pause, but we can also accomodate unions of contrast events via 
 \[ 
 P(A\cup B) = P(A) + P(B) - P(A \cap B).
 \]
@@ -398,7 +398,7 @@ p(\varepsilon,\beta,\gamma|\tau,\nu,\theta,\sigma, y) \\
 %    \includegraphics{dag3c}
 %    \end{minipage}
 % \end{figure}
-
+\pause
 where $G\approx 40\,000$, $N=16$, and $L=5$ in our application \pause and thus we have 
 \begin{itemize}
 \item $G\times N + G + 2 + G\times L + 2\times L \approx 800\,000$ parameters \pause
@@ -922,7 +922,7 @@ where $\tilde\theta_k \sim F_0$, $\pi_k= \pi'_k \prod_{i=1}^{k-1} (1-\pi'_i)$, a
 
 \vspace{0.1in} \pause
 
-We can approximate the infinite sum with a finite sum of $K$ components with $\pi_K = 1-\sum_{k=1}^{K-1} \pi_k$ and introduce labels $z_g\in \{1,\ldots,K\}$ that indicating component membership for gene $g$. 
+We can approximate the infinite sum with a finite sum of $K$ components with $\pi_K = 1-\sum_{k=1}^{K-1} \pi_k$ and introduce labels $\zeta_g\in \{1,\ldots,K\}$ that indicating component membership for gene $g$. 
 
 \vspace{0.1in} \pause
 
@@ -1021,7 +1021,7 @@ Thank you!
   \hat{h}_T = \frac{1}{T} \sum_{t=1}^{(t)} h\left(\theta^{(t)}\right). \]
 	\pause where $\theta^{(t)}$ is the $t^{th}$ iteration from the MCMC.  \pause Under regularity conditions, 
 	\begin{itemize}
-	\item SLLN: $\hat{h}_T$ converges almost surely to $E[h(\theta)|y]$. \pause 
+	\item SLLN: $\hat{h}_T\stackrel{a.s.}{\to} E[h(\theta)|y]$ as $T\to \infty$. \pause 
 	\item CLT: \alert{under stronger regularity conditions}, \pause
 	\[ \hat{h}_T \stackrel{d}{\to} N\left(E[h(\theta)|y], \sigma^2/T\right) \pause \]
 	where 
