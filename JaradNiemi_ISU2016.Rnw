@@ -1,4 +1,4 @@
-\documentclass[10pt]{beamer}
+\documentclass[handout,10pt]{beamer}
 
 \usetheme{AnnArbor}
 \usecolortheme{beaver}
@@ -487,7 +487,7 @@ p(\beta_{\ell}|\ldots) &\propto \prod_{g=1}^G \prod_{n=1}^N Po\left(y_{gn}|e^{h_
 Sufficient ``statistics'':
 \[ \begin{array}{rl@{\qquad}rl}
 p(\tau|\ldots) &\sim Ga(\tau|a',b') & (a',b') &= f_{\tau}(\gamma,\nu,a,b) \\
-p(\nu|\ldots) &\sim p(\u|d')\mathrm{I}(0<\nu<d) & d' &= f_\nu(\gamma,\tau,d) \\
+p(\nu|\ldots) &\sim p(\nu|d')\mathrm{I}(0<\nu<d) & d' &= f_\nu(\gamma,\tau,d) \\
 p(\theta_\ell|\ldots) &\sim N(\theta_\ell|m'_\ell, C'_\ell) & (m'_\ell,C'_\ell) &= f_{\theta_\ell}(\beta_\ell,\sigma_\ell,c_\ell^2) \\
 p(\sigma_\ell^2|\ldots) &\sim IG(e',f') \mathrm{I}(0<\sigma_\ell^2<s^2_\ell) & (e',f') &= f_{\sigma_\ell}(\beta_\ell,\theta_{\ell})
 \end{array} \]
@@ -788,7 +788,89 @@ where the lower plot indicates that when the intervals miss, we are overshrinkin
 
 \section{Future work}
 \subsection{Alternative hierarchical distributions}
+\begin{frame}
+\frametitle{Scale-mixture of normals}
+
+Recall the model 
+\[ 
+y_{gn} \ind \text{Po} \left (e^{h_n + \varepsilon_{gn} + x_n' \beta_{g}} \right )
+\]
+with hierarchical distribution
+\[ 
+\beta_{g\ell}\onslide<2->{|\xi_{g\ell}} \ind N(\theta_\ell, \onslide<2->{\xi_{g\ell}}\sigma_\ell^2)
+\]
+\pause
+where the distribution of $\xi_{g\ell}$ will determine the marginal distribution for $\beta_{g\ell}$ via 
+\[ 
+p(\beta_{g\ell}) = \int N(\beta_{g\ell}|\theta_\ell,\xi_{g\ell}\sigma_\ell^2)p(\xi_{g\ell}) d \xi_{g\ell}.
+\]
+\pause
+For example, 
+\begin{itemize}[<+->]
+\item $\xi_{g\ell}=1 \implies \beta_{g\ell} \ind N(\theta_\ell,\sigma_\ell^2)$
+\item $\xi_{g\ell} \ind IG(q_\ell, r_\ell) \implies \beta_{g\ell} \ind t_{2q_\ell}(\theta_\ell,\sigma^2_\ell r_\ell/ q_\ell)$
+\item $\xi_{g\ell} \ind Exp(k_\ell) \implies \beta_{g\ell} \ind Laplace(\theta_\ell, \sigma^2_\ell/2k_\ell)$
+\item $\xi_{g\ell} \ind Ca^+(0,1) \implies \beta_{g\ell} \ind Horseshoe(\theta_\ell,\sigma_\ell)$
+\end{itemize}
+\pause
+These are all implemented in {\tt fbseq}. 
+
+
+\end{frame}
+
+
+
 \subsection{Semi-parametric approach}
+\begin{frame}
+\frametitle{Dirichlet process prior}
+
+Recall the model 
+\[ 
+y_{gn} \ind \text{Po} \left (e^{h_n + \varepsilon_{gn} + x_n' \beta_{g}} \right ) \qquad \varepsilon_{gn} \ind N(0,\gamma_g)
+\]
+\pause
+Since $G$ is so large, we should be able to learn the distribution of the gene-specific parameters. \pause One possibility is 
+\[ 
+\theta_g = \left( \begin{array}{c} \beta_g' \\ \log(\gamma_g) \end{array} \right) \ind \mathcal{F}
+\]
+for some unknown distribution $\mathcal{F}$. \pause Then we can place a prior on $\mathcal{F}$, e.g. 
+\[ 
+\mathcal{F} \sim DP(a F_0),
+\]
+i.e. a Dirichlet process prior with concentration parameter $a>0$ and base measure $F_0$ on $\mathbb{R}^{L+1}$. 
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Stick-breaking representation}
+
+A stick-breaking representation of $\mathcal{F}$ is the probability mass function
+\[ 
+f(\theta) = \sum_{k=1}^\infty \pi_k \delta_{\tilde\theta_k}(\theta)
+\]
+where $\tilde\theta_k \sim F_0$, $\pi_k= \pi'_k \prod_{i=1}^{k-1} (1-\pi'_i)$, and $\pi'_k \ind Be(1,\alpha)$.
+
+\vspace{0.1in} \pause
+
+We can approximate the infinite sum with a finite sum of $K$ components with $\pi_K = 1-\sum_{k=1}^{K-1} \pi_k$ and introduce labels $z_g\in \{1,\ldots,K\}$ that indicating component membership for gene $g$. 
+
+\vspace{0.1in} \pause
+
+The additional Gibbs sampling steps are 
+\begin{itemize}[<+->]
+\item $p(\pi|\ldots)$ which has a conjugate update, 
+\item $p(\zeta|\ldots)$ which is conditionally independent across genes and therefore embarrassingly parallel and requires a parallel scan, i.e. cumulative sum, and
+\item $p(\tilde\theta|\ldots)$ which is 
+  \begin{itemize}
+  \item conditionally independent across the $K$ components and 
+  \item requires sufficient ``statistics'' of the genes in each component.
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+
+
+
 \subsection{Allele specific expression}
 
 
