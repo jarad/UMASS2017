@@ -724,6 +724,7 @@ chain_list = fbseq(chain, backend = "CUDA")
 \subsection{Credible interval coverage}
 \begin{frame}
 \frametitle{Hyperparameter coverage}
+\setkeys{Gin}{width=0.8\textwidth}
 \begin{center}
 \includegraphics{fig-hypercoverage}
 \end{center}
@@ -746,6 +747,7 @@ where the lower plot indicates that when the intervals miss, we are overshrinkin
 
 \begin{frame}
 \frametitle{Mean squared error}
+\setkeys{Gin}{width=0.8\textwidth}
 \begin{center}
 \includegraphics{fig-msecomparison}
 \end{center}
@@ -756,6 +758,7 @@ where the lower plot indicates that when the intervals miss, we are overshrinkin
 \subsection{Heterosis detection}
 \begin{frame}
 \frametitle{ROC curves for heterosis detection}
+\setkeys{Gin}{width=0.8\textwidth}
 \begin{center}
 \includegraphics{fig-roc16}
 \end{center}
@@ -789,6 +792,7 @@ where the lower plot indicates that when the intervals miss, we are overshrinkin
 
 \begin{frame}
 \frametitle{Hyperparameter posterior}
+\setkeys{Gin}{width=0.8\textwidth}
 \begin{center}
 \includegraphics{fig-hyperhist}
 \end{center}
@@ -796,10 +800,12 @@ where the lower plot indicates that when the intervals miss, we are overshrinkin
 
 
 \begin{frame}
-\setkeys{Gin}{width=0.5\textwidth}
+\setkeys{Gin}{width=0.6\textwidth}
 \frametitle{Gene-specific parameter posteriors}
 
 Compare posterior distribution (gray area) to normal-based approximation (black dashed line).
+
+\vspace{-0.15in}
 
 \begin{center}
 \includegraphics{fig-betahist}
@@ -809,8 +815,9 @@ Compare posterior distribution (gray area) to normal-based approximation (black 
 
 \begin{frame}
 \frametitle{Smokestack plot}
+\setkeys{Gin}{width=0.7\textwidth}
 
-Effect size for HPH BM is $\min(2\beta_{g2}+\beta_{g4}, 2\beta_{g3}+\beta_{g4})/\sqrt{\gamma_g}$. 
+Effect size for HPH BM is the maximum of 0 and $\min(2\beta_{g2}+\beta_{g4}, 2\beta_{g3}+\beta_{g4})/\sqrt{\gamma_g}$. 
 
 \begin{center}
 \includegraphics{fig-volcano}
@@ -820,6 +827,7 @@ Effect size for HPH BM is $\min(2\beta_{g2}+\beta_{g4}, 2\beta_{g3}+\beta_{g4})/
 
 \begin{frame}
 \frametitle{Shrinkage}
+\setkeys{Gin}{width=0.7\textwidth}
 
 \begin{center}
 \includegraphics{fig-edgerparms}
