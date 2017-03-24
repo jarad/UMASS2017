@@ -86,7 +86,7 @@ This research was supported by National Institute of General Medical Sciences (N
 	\item Heterosis detection via ROC curves \pause
 	\end{itemize}
 \item Real data analysis \pause
-\item Ongoing work
+%\item Ongoing work
 \end{itemize}
 
 \end{frame}
@@ -836,13 +836,40 @@ Effect size for HPH BM is the maximum of 0 and $\min(2\beta_{g2}+\beta_{g4}, 2\b
 
 
 
+\begin{frame}
+\frametitle{Summary}
 
+\begin{itemize}
+\item Introduced a hierarchical overdispersed count regression model and
+\item a GPU-implementation of a fully Bayesian analysis.
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+This slides are available 
+\begin{itemize}
+\item \url{https://github.com/jarad/UMASS2017}
+\item \url{http://www.jarad.me/research/presentations.html}
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+\begin{center}
+{\Huge
+Thank you!
+}
+\end{center}
+
+\end{frame}
+
+\appendix
+\backupbegin
 \section{Ongoing work}
 \begin{frame}
 \frametitle{Ongoing work}
 
 \begin{itemize}
-\item Alterantive hierarchical distributions via scale mixtures of normals:
+\item Alternative hierarchical distributions via scale mixtures of normals:
 	\begin{itemize}
 	\item $t$
 	\item Laplace
@@ -970,35 +997,11 @@ From a modeling perspective, this brings up at least two questions:
 
 
 
-\begin{frame}
-\frametitle{Summary}
-
-\begin{itemize}
-\item Introduced a hierarchical overdispersed count regression model and
-\item a GPU-implementation of a fully Bayesian analysis.
-\end{itemize}
-
-\vspace{0.2in} \pause
-
-This slides are available 
-\begin{itemize}
-\item \url{https://github.com/jarad/ISU2016}
-\item \url{http://www.jarad.me/research/presentations.html}
-\end{itemize}
-
-\vspace{0.2in} \pause
-
-\begin{center}
-{\Huge
-Thank you!
-}
-\end{center}
-
-\end{frame}
 
 
-\appendix
-\backupbegin
+
+
+
 \begin{frame}
 \frametitle{References}
 \scriptsize
